@@ -54,6 +54,7 @@
             <groupId>com.dukascopy.api</groupId>
             <artifactId>JForex-API</artifactId>
             <version>${jforex.version}</version>
+            <classifier>sources</classifier>
         </dependency>
 
         <dependency>
