@@ -23,6 +23,7 @@
         <logback.version>1.2.3</logback.version>
         <slf4j.version>1.7.25</slf4j.version>
         <guava.version>25.1-jre</guava.version>
+        <kyro.version>4.0.2</kyro.version>
     </properties>
 
     <repositories>
@@ -98,6 +99,12 @@
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
             <version>${guava.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.esotericsoftware</groupId>
+            <artifactId>kryo</artifactId>
+            <version>${kyro.version}</version>
         </dependency>
     </dependencies>
 </project>

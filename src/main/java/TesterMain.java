@@ -10,7 +10,7 @@
  * -Redistribution in binary form must reproduce the above copyright notice,
  *  this list of conditions and the following disclaimer in the documentation
  *  and/or other materials provided with the distribution.
- * 
+ *
  * Neither the name of Dukascopy (Suisse) SA or the names of contributors may
  * be used to endorse or promote products derived from this software without
  * specific prior written permission.
@@ -37,8 +37,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.Future;
 
 /**
@@ -51,7 +50,6 @@ public class TesterMain {
     private static String userName = "DEMO2yVKVy";
     private static String password = "yVKVy";
     private static ITesterClient client;
-    private static String reportsFileLocation = "C:\\report.html";
 
     public static void main(String[] args) throws Exception {
         client = TesterFactory.getDefaultInstance();
@@ -63,8 +61,7 @@ public class TesterMain {
         loadData();
 
         LOGGER.info("Starting strategy");
-        client.startStrategy(new MA_Play(), getLoadingProgressListener());
-        //now it's running
+        client.startStrategy(new TickSaver(), getLoadingProgressListener());
     }
 
     private static void setSystemListener() {
@@ -77,15 +74,6 @@ public class TesterMain {
             @Override
             public void onStop(long processId) {
                 LOGGER.info("Strategy stopped: " + processId);
-                File reportFile = new File(reportsFileLocation);
-                try {
-                    client.createReport(processId, reportFile);
-                } catch (Exception e) {
-                    LOGGER.error(e.getMessage(), e);
-                }
-                if (client.getStartedStrategies().size() == 0) {
-                    System.exit(0);
-                }
             }
 
             @Override
@@ -95,15 +83,13 @@ public class TesterMain {
 
             @Override
             public void onDisconnect() {
-                //tester doesn't disconnect
             }
         });
     }
 
     private static void tryToConnect() throws Exception {
         LOGGER.info("Connecting...");
-        //connect to the server using jnlp, user name and password
-        //connection is needed for data downloading
+
         client.connect(jnlpUrl, userName, password);
 
         //wait for it to connect
@@ -119,7 +105,6 @@ public class TesterMain {
     }
 
     private static void subscribeToInstruments() {
-        //set instruments that will be used in testing
         Set<Instrument> instruments = new HashSet<>();
         instruments.add(Instrument.EURUSD);
         LOGGER.info("Subscribing instruments...");
@@ -127,10 +112,20 @@ public class TesterMain {
     }
 
     private static void loadData() throws InterruptedException, java.util.concurrent.ExecutionException {
-        //load data
+        Calendar fromDate = new GregorianCalendar();
+        Calendar toDate = new GregorianCalendar();
+
+        fromDate.setTimeZone(TimeZone.getTimeZone("Europe/Berlin"));
+        fromDate.set(2018, 0, 1);
+
+        toDate.setTimeZone(TimeZone.getTimeZone("Europe/Berlin"));
+        toDate.set(2018, 1, 1);
+
+        client.setDataInterval(ITesterClient.DataLoadingMethod.ALL_TICKS, fromDate.getTimeInMillis(), toDate.getTimeInMillis());
+
         LOGGER.info("Downloading data");
         Future<?> future = client.downloadData(null);
-        //wait for downloading to complete
+
         future.get();
     }
 
