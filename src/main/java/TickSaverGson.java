@@ -33,18 +33,14 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import data.PriceData;
 import data.PriceType;
-import org.apache.commons.io.IOUtils;
 import util.PeriodUtil;
 
-import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -59,9 +55,6 @@ public class TickSaverGson implements IStrategy {
     int currentDay = 0;
 
     List<PriceData> dataList = new ArrayList<>();
-
-    public TickSaverGson() throws IOException {
-    }
 
     public void onStart(IContext context) throws JFException {
         engine = context.getEngine();
@@ -84,8 +77,6 @@ public class TickSaverGson implements IStrategy {
         priceData.setTime(tick.getTime());
         priceData.setInstrument(instrument.name());
         priceData.setPriceType(PriceType.TICk);
-
-        dataList.add(priceData);
 
         try {
             rollWriter(priceData);
@@ -114,8 +105,6 @@ public class TickSaverGson implements IStrategy {
         priceData.setInstrument(instrument.name());
         priceData.setTime(askBar.getTime());
         priceData.setPriceType(PriceType.BAR);
-
-        dataList.add(priceData);
 
         try {
             rollWriter(priceData);
@@ -151,8 +140,6 @@ public class TickSaverGson implements IStrategy {
         }
 
         dataList.add(priceData);
-
-
     }
 
     public void onMessage(IMessage message) throws JFException {
