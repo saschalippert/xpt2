@@ -33,10 +33,12 @@ import com.dukascopy.api.LoadingProgressListener;
 import com.dukascopy.api.system.ISystemListener;
 import com.dukascopy.api.system.ITesterClient;
 import com.dukascopy.api.system.TesterFactory;
+import db.AppConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.context.support.AbstractApplicationContext;
 
-import java.io.File;
 import java.util.*;
 import java.util.concurrent.Future;
 
@@ -47,8 +49,8 @@ public class TesterMain {
     private static final Logger LOGGER = LoggerFactory.getLogger(TesterMain.class);
 
     private static String jnlpUrl = "http://platform.dukascopy.com/demo/jforex.jnlp";
-    private static String userName = "DEMO2yVKVy";
-    private static String password = "yVKVy";
+    private static String userName = "DEMO2ZggWH";
+    private static String password = "ZggWH";
     private static ITesterClient client;
 
     public static void main(String[] args) throws Exception {
@@ -60,8 +62,10 @@ public class TesterMain {
         client.setInitialDeposit(Instrument.EURUSD.getSecondaryJFCurrency(), 50000);
         loadData();
 
+
         LOGGER.info("Starting strategy");
-        client.startStrategy(new TickSaver(), getLoadingProgressListener());
+
+        client.startStrategy(new TickSaverGson(), getLoadingProgressListener());
     }
 
     private static void setSystemListener() {
@@ -119,7 +123,7 @@ public class TesterMain {
         fromDate.set(2018, 0, 1);
 
         toDate.setTimeZone(TimeZone.getTimeZone("Europe/Berlin"));
-        toDate.set(2018, 1, 1);
+        toDate.set(2018, 5, 1);
 
         client.setDataInterval(ITesterClient.DataLoadingMethod.ALL_TICKS, fromDate.getTimeInMillis(), toDate.getTimeInMillis());
 
