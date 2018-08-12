@@ -1,4 +1,4 @@
-/*
+package startegies;/*
  * Copyright (c) 2017 Dukascopy (Suisse) SA. All Rights Reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,19 +31,18 @@
 import com.dukascopy.api.*;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import data.PriceData;
-import data.PriceType;
-import util.PeriodUtil;
+import data.TickData;
+import util.FileUtil;
 
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -52,9 +51,9 @@ public class TickSaverGson implements IStrategy {
     private IConsole console;
     private Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
-    int currentDay = 0;
+    LocalDateTime currentDate;
 
-    List<PriceData> dataList = new ArrayList<>();
+    List<TickData> dataList = new ArrayList<>();
 
     public void onStart(IContext context) throws JFException {
         engine = context.getEngine();
@@ -68,75 +67,52 @@ public class TickSaverGson implements IStrategy {
     }
 
     public void onTick(Instrument instrument, ITick tick) throws JFException {
-        PriceData priceData = new PriceData();
-        priceData.setTickAskPrice(tick.getAsk());
-        priceData.setTickAskVolume(tick.getAskVolume());
-        priceData.setTickBidPrice(tick.getBid());
-        priceData.setTickBidVolume(tick.getBidVolume());
+        TickData tickData = new TickData();
+        tickData.setAskPrice(tick.getAsk());
+        tickData.setAskVolume(tick.getAskVolume());
+        tickData.setBidPrice(tick.getBid());
+        tickData.setBidVolume(tick.getBidVolume());
 
-        priceData.setTime(tick.getTime());
-        priceData.setInstrument(instrument.name());
-        priceData.setPriceType(PriceType.TICk);
+        tickData.setTime(tick.getTime());
+        tickData.setInstrument(instrument.name());
 
         try {
-            rollWriter(priceData);
+            rollWriter(tickData);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
     public void onBar(Instrument instrument, Period period, IBar askBar, IBar bidBar) {
-        PriceData priceData = new PriceData();
 
-        priceData.setBarAskClose(askBar.getClose());
-        priceData.setBarAskHigh(askBar.getHigh());
-        priceData.setBarAskLow(askBar.getLow());
-        priceData.setBarAskOpen(askBar.getOpen());
-        priceData.setBarAskVolume(askBar.getClose());
-
-        priceData.setBarBidClose(bidBar.getClose());
-        priceData.setBarBidHigh(bidBar.getHigh());
-        priceData.setBarBidLow(bidBar.getLow());
-        priceData.setBarBidOpen(bidBar.getOpen());
-        priceData.setBarBidVolume(bidBar.getVolume());
-
-        priceData.setBarPeriod(PeriodUtil.map(period));
-
-        priceData.setInstrument(instrument.name());
-        priceData.setTime(askBar.getTime());
-        priceData.setPriceType(PriceType.BAR);
-
-        try {
-            rollWriter(priceData);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
     }
 
-    private void rollWriter(PriceData priceData) throws IOException {
+    private void rollWriter(TickData priceData) throws IOException {
 
-        LocalDateTime localDateTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(priceData.getTime()), ZoneId.systemDefault());
+        LocalDateTime newDate = LocalDateTime.ofInstant(Instant.ofEpochMilli(priceData.getTime()), ZoneId.systemDefault()).truncatedTo(ChronoUnit.HOURS);
 
-        if (currentDay != localDateTime.getDayOfMonth()) {
+        if (currentDate == null) {
+            currentDate = newDate;
+        }
 
-            String year = String.format("%02d", localDateTime.getYear());
-            String month = String.format("%02d", localDateTime.getMonthValue());
-            String day = String.format("%02d", localDateTime.getDayOfMonth());
+        if (newDate.isAfter(currentDate)) {
 
+            console.getOut().println(currentDate.getDayOfMonth() + " -> " + newDate.getDayOfMonth());
 
-            Path path = Paths.get(String.format("c:/temp/%s/%s/%s/%s.json", priceData.getInstrument(), year, month, day));
+            Path path = FileUtil.getFile(newDate, priceData.getInstrument());
+
+            if (path.toFile().exists()) {
+                throw new RuntimeException("file exists");
+            }
 
             Files.createDirectories(path.getParent());
 
-            Writer writer = new FileWriter(path.toFile());
-
-            gson.toJson(dataList.toArray(), writer);
-
-            writer.flush();
-            writer.close();
+            try (Writer writer = new FileWriter(path.toFile())) {
+                gson.toJson(dataList.toArray(), writer);
+            }
 
             dataList.clear();
-            currentDay = localDateTime.getDayOfMonth();
+            currentDate = newDate;
         }
 
         dataList.add(priceData);

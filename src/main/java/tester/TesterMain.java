@@ -1,4 +1,4 @@
-/*
+package tester;/*
  * Copyright (c) 2017 Dukascopy (Suisse) SA. All Rights Reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,11 +33,9 @@ import com.dukascopy.api.LoadingProgressListener;
 import com.dukascopy.api.system.ISystemListener;
 import com.dukascopy.api.system.ITesterClient;
 import com.dukascopy.api.system.TesterFactory;
-import db.AppConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.annotation.AnnotationConfigApplicationContext;
-import org.springframework.context.support.AbstractApplicationContext;
+import startegies.TickSaverGson;
 
 import java.util.*;
 import java.util.concurrent.Future;
