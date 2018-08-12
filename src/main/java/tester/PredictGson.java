@@ -133,7 +133,7 @@ public class PredictGson {
                     .seed(seed)
                     .optimizationAlgo(OptimizationAlgorithm.STOCHASTIC_GRADIENT_DESCENT)
                     .weightInit(WeightInit.XAVIER)
-                    .updater(new RmsProp(1e4))
+                    .updater(new RmsProp(1e-4))
                     .l2(1e-4)
                     .list()
                     .layer(0, new GravesLSTM.Builder()
