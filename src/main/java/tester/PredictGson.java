@@ -10,10 +10,7 @@ import org.deeplearning4j.nn.conf.BackpropType;
 import org.deeplearning4j.nn.conf.MultiLayerConfiguration;
 import org.deeplearning4j.nn.conf.NeuralNetConfiguration;
 import org.deeplearning4j.nn.conf.Updater;
-import org.deeplearning4j.nn.conf.layers.DenseLayer;
-import org.deeplearning4j.nn.conf.layers.GravesLSTM;
-import org.deeplearning4j.nn.conf.layers.OutputLayer;
-import org.deeplearning4j.nn.conf.layers.RnnOutputLayer;
+import org.deeplearning4j.nn.conf.layers.*;
 import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;
 import org.deeplearning4j.nn.weights.WeightInit;
 import org.deeplearning4j.optimize.listeners.ScoreIterationListener;
@@ -78,7 +75,7 @@ public class PredictGson {
         PredictGson testerGson = new PredictGson();
         testerGson.init();
         testerGson.loadMinMax();
-        //testerGson.train();
+        testerGson.train();
         testerGson.test();
 
         Runtime.getRuntime().addShutdownHook(new Thread() {
@@ -133,17 +130,17 @@ public class PredictGson {
                     .seed(seed)
                     .optimizationAlgo(OptimizationAlgorithm.STOCHASTIC_GRADIENT_DESCENT)
                     .weightInit(WeightInit.XAVIER)
-                    .updater(new RmsProp(1e-4))
+                    .updater(new RmsProp())
                     .l2(1e-4)
                     .list()
-                    .layer(0, new GravesLSTM.Builder()
+                    .layer(0, new LSTM.Builder()
                             .nIn(nIn)
                             .nOut(lstmLayer1Size)
                             .activation(Activation.TANH)
                             .gateActivationFunction(Activation.HARDSIGMOID)
                             .dropOut(dropoutRatio)
                             .build())
-                    .layer(1, new GravesLSTM.Builder()
+                    .layer(1, new LSTM.Builder()
                             .nIn(lstmLayer1Size)
                             .nOut(lstmLayer2Size)
                             .activation(Activation.TANH)
