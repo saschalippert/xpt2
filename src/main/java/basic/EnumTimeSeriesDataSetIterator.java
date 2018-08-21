@@ -28,19 +28,16 @@ public class EnumTimeSeriesDataSetIterator implements DataSetIterator {
         INDArray input = Nd4j.create(new int[]{batchSize, 1, timeSeriesSize});
         INDArray label = Nd4j.create(new int[]{batchSize, 1, timeSeriesSize});
 
-        int max = 0;
-
         for (int bIdx = 0; bIdx < batchSize; bIdx++) {
-            for (int tsIdx = bIdx; tsIdx < timeSeriesSize; tsIdx++) {
-                int temp = current + ((bIdx + tsIdx) * step);
-                max = temp;
+            for (int tsIdx = 0; tsIdx < timeSeriesSize; tsIdx++) {
+                int temp = current + step;
 
                 input.putScalar(new int[]{bIdx, 0, tsIdx}, temp / (double) end);
                 label.putScalar(new int[]{bIdx, 0, tsIdx}, (temp + step) / (double) end);
             }
-        }
 
-        current = max;
+            current = current + step;
+        }
 
         return new DataSet(input, label);
     }
@@ -57,7 +54,7 @@ public class EnumTimeSeriesDataSetIterator implements DataSetIterator {
 
     @Override
     public boolean resetSupported() {
-        return false;
+        return true;
     }
 
     @Override
@@ -92,7 +89,7 @@ public class EnumTimeSeriesDataSetIterator implements DataSetIterator {
 
     @Override
     public boolean hasNext() {
-        return current < 900;
+        return current < end;
     }
 
     @Override
