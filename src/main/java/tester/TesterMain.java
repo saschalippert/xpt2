@@ -28,28 +28,42 @@ package tester;/*
  * EVEN IF DUKASCOPY HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
  */
 
+import java.util.Calendar;
+import java.util.GregorianCalendar;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.TimeZone;
+import java.util.concurrent.Future;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.dukascopy.api.IStrategy;
 import com.dukascopy.api.Instrument;
 import com.dukascopy.api.LoadingProgressListener;
 import com.dukascopy.api.system.ISystemListener;
 import com.dukascopy.api.system.ITesterClient;
 import com.dukascopy.api.system.TesterFactory;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
 import startegies.TickSaverGson;
 
-import java.util.*;
-import java.util.concurrent.Future;
-
-/**
- * This small program demonstrates how to initialize Dukascopy tester and start a strategy
- */
 public class TesterMain {
-    private static final Logger LOGGER = LoggerFactory.getLogger(TesterMain.class);
+
+    private static final Logger logger = LoggerFactory.getLogger(TesterMain.class);
+
+    private static final Calendar fromDate = new GregorianCalendar(2018, 0, 1);
+    private static final Calendar toDate = new GregorianCalendar(2018, 5, 1);
+    private static final IStrategy strategy = new TickSaverGson();
 
     private static String jnlpUrl = "http://platform.dukascopy.com/demo/jforex.jnlp";
     private static String userName = "DEMO2ZggWH";
     private static String password = "ZggWH";
     private static ITesterClient client;
+
+    static {
+	fromDate.setTimeZone(TimeZone.getTimeZone("Europe/Berlin"));
+	toDate.setTimeZone(TimeZone.getTimeZone("Europe/Berlin"));
+    }
 
     public static void main(String[] args) throws Exception {
         client = TesterFactory.getDefaultInstance();
@@ -61,36 +75,37 @@ public class TesterMain {
         loadData();
 
 
-        LOGGER.info("Starting strategy");
+	logger.info("Starting strategy");
 
-        client.startStrategy(new TickSaverGson(), getLoadingProgressListener());
+	client.startStrategy(strategy, getLoadingProgressListener());
     }
 
     private static void setSystemListener() {
         client.setSystemListener(new ISystemListener() {
             @Override
             public void onStart(long processId) {
-                LOGGER.info("Strategy started: " + processId);
+		logger.info("Strategy started: " + processId);
             }
 
             @Override
             public void onStop(long processId) {
-                LOGGER.info("Strategy stopped: " + processId);
+		logger.info("Strategy stopped: " + processId);
             }
 
             @Override
             public void onConnect() {
-                LOGGER.info("Connected");
+		logger.info("Connected");
             }
 
             @Override
             public void onDisconnect() {
+		logger.info("Disconnected");
             }
         });
     }
 
     private static void tryToConnect() throws Exception {
-        LOGGER.info("Connecting...");
+	logger.info("Connecting...");
 
         client.connect(jnlpUrl, userName, password);
 
@@ -101,7 +116,7 @@ public class TesterMain {
             i--;
         }
         if (!client.isConnected()) {
-            LOGGER.error("Failed to connect Dukascopy servers");
+	    logger.error("Failed to connect Dukascopy servers");
             System.exit(1);
         }
     }
@@ -109,25 +124,15 @@ public class TesterMain {
     private static void subscribeToInstruments() {
         Set<Instrument> instruments = new HashSet<>();
         instruments.add(Instrument.EURUSD);
-        LOGGER.info("Subscribing instruments...");
+	logger.info("Subscribing instruments...");
         client.setSubscribedInstruments(instruments);
     }
 
     private static void loadData() throws InterruptedException, java.util.concurrent.ExecutionException {
-        Calendar fromDate = new GregorianCalendar();
-        Calendar toDate = new GregorianCalendar();
-
-        fromDate.setTimeZone(TimeZone.getTimeZone("Europe/Berlin"));
-        fromDate.set(2018, 0, 1);
-
-        toDate.setTimeZone(TimeZone.getTimeZone("Europe/Berlin"));
-        toDate.set(2018, 5, 1);
 
         client.setDataInterval(ITesterClient.DataLoadingMethod.ALL_TICKS, fromDate.getTimeInMillis(), toDate.getTimeInMillis());
-
-        LOGGER.info("Downloading data");
+	logger.info("Downloading data");
         Future<?> future = client.downloadData(null);
-
         future.get();
     }
 
@@ -135,11 +140,12 @@ public class TesterMain {
         return new LoadingProgressListener() {
             @Override
             public void dataLoaded(long startTime, long endTime, long currentTime, String information) {
-                LOGGER.info(information);
+		logger.info(information);
             }
 
             @Override
             public void loadingFinished(boolean allDataLoaded, long startTime, long endTime, long currentTime) {
+		logger.info("Loading finished, " + (allDataLoaded ? "" : "(not all data loaded)"));
             }
 
             @Override
