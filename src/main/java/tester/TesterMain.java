@@ -132,7 +132,7 @@ public class TesterMain {
 
         client.setDataInterval(ITesterClient.DataLoadingMethod.ALL_TICKS, fromDate.getTimeInMillis(), toDate.getTimeInMillis());
 	logger.info("Downloading data");
-        Future<?> future = client.downloadData(null);
+	Future<?> future = client.downloadData(getLoadingProgressListener());
         future.get();
     }
 
