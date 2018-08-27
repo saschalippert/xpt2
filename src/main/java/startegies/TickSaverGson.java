@@ -28,12 +28,6 @@ package startegies;/*
  * EVEN IF DUKASCOPY HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
  */
 
-import com.dukascopy.api.*;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import data.TickData;
-import util.FileUtil;
-
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
@@ -46,7 +40,25 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.dukascopy.api.IAccount;
+import com.dukascopy.api.IBar;
+import com.dukascopy.api.IConsole;
+import com.dukascopy.api.IContext;
+import com.dukascopy.api.IEngine;
+import com.dukascopy.api.IMessage;
+import com.dukascopy.api.IStrategy;
+import com.dukascopy.api.ITick;
+import com.dukascopy.api.Instrument;
+import com.dukascopy.api.JFException;
+import com.dukascopy.api.Period;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
+import data.TickData;
+import util.FileUtil;
+
 public class TickSaverGson implements IStrategy {
+    @SuppressWarnings("unused")
     private IEngine engine = null;
     private IConsole console;
     private Gson gson = new GsonBuilder().setPrettyPrinting().create();
@@ -58,7 +70,6 @@ public class TickSaverGson implements IStrategy {
     public void onStart(IContext context) throws JFException {
         engine = context.getEngine();
         this.console = context.getConsole();
-
         console.getOut().println("Started");
     }
 
@@ -72,10 +83,8 @@ public class TickSaverGson implements IStrategy {
         tickData.setAskVolume(tick.getAskVolume());
         tickData.setBidPrice(tick.getBid());
         tickData.setBidVolume(tick.getBidVolume());
-
         tickData.setTime(tick.getTime());
         tickData.setInstrument(instrument.name());
-
         try {
             rollWriter(tickData);
         } catch (IOException e) {
